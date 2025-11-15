@@ -5,9 +5,16 @@
 @section('content')
     <h1 class="mb-3">{{ $servico->exists ? 'Editar Serviço' : 'Novo Serviço' }}</h1>
 
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
-            <form action="{{ $servico->exists ? route('servicos.update', $servico->id) : route('servicos.store') }}" method="POST">
+            <form action="{{ $servico->exists ? route('servicos.updateForClient', $servico->id) : route('servicos.storeForClient') }}" method="POST">
                 @csrf
                 @if($servico->exists)
                     @method('PUT')
@@ -47,9 +54,10 @@
 
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-success">{{ $servico->exists ? 'Atualizar' : 'Cadastrar' }}</button>
-                    <a href="{{ route('servicos.index') }}" class="btn btn-secondary">Voltar</a>
+                    <a href="{{ route('servicos.listForClient') }}" class="btn btn-secondary">Voltar</a>
                 </div>
             </form>
         </div>
     </div>
 @endsection
+

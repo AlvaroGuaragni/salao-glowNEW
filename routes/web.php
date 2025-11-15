@@ -18,8 +18,13 @@ Route::get('/dashboard', function (Request $request) {
         return redirect()->route('clientes.index');
     }
     
+    $cliente = $request->user()->cliente;
+    if (!$cliente) {
+        return redirect()->route('profile.edit')->with('error', 'Complete seu perfil para continuar.');
+    }
+    
     $agendamentos = Agendamento::with('servico')
-        ->where('cliente_id', $request->user()->cliente->id)
+        ->where('cliente_id', $cliente->id)
         ->orderBy('data_hora', 'desc')
         ->get();
     
@@ -36,8 +41,19 @@ Route::middleware('auth')->group(function () {
     
 
     Route::get('/servicos-disponiveis', [ServicoController::class, 'listForClient'])->name('servicos.listForClient');
+    Route::get('/servicos-disponiveis/novo', [ServicoController::class, 'createForClient'])->name('servicos.createForClient');
+    Route::post('/servicos-disponiveis', [ServicoController::class, 'storeForClient'])->name('servicos.storeForClient');
+    Route::get('/servicos-disponiveis/{servico}/editar', [ServicoController::class, 'editForClient'])->name('servicos.editForClient');
+    Route::put('/servicos-disponiveis/{servico}', [ServicoController::class, 'updateForClient'])->name('servicos.updateForClient');
+    Route::delete('/servicos-disponiveis/{servico}', [ServicoController::class, 'destroyForClient'])->name('servicos.destroyForClient');
     
     Route::get('/meus-pagamentos', [PagamentoController::class, 'listForClient'])->name('pagamentos.listForClient');
+    Route::get('/meus-pagamentos/novo', [PagamentoController::class, 'createForClient'])->name('pagamentos.createForClient');
+    Route::post('/meus-pagamentos', [PagamentoController::class, 'storeForClient'])->name('pagamentos.storeForClient');
+    Route::get('/meus-pagamentos/{pagamento}/editar', [PagamentoController::class, 'editForClient'])->name('pagamentos.editForClient');
+    Route::put('/meus-pagamentos/{pagamento}', [PagamentoController::class, 'updateForClient'])->name('pagamentos.updateForClient');
+    Route::delete('/meus-pagamentos/{pagamento}', [PagamentoController::class, 'destroyForClient'])->name('pagamentos.destroyForClient');
+    Route::get('/meus-pagamentos/relatorio/pdf', [PagamentoController::class, 'generatePdfForClient'])->name('pagamentos.generatePdfForClient');
 
     Route::post('/agendamentos', [AgendamentoController::class, 'store'])->name('agendamentos.store');
     

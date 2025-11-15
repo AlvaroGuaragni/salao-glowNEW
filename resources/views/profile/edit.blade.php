@@ -1,27 +1,41 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
-        </h2>
+        <h2 class="h4 mb-0">Meu Perfil</h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
-            </div>
+    <div class="py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                @if(session('status') === 'profile-updated')
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        Perfil atualizado com sucesso!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
+                @if(session('status') === 'password-updated')
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        Senha atualizada com sucesso!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
+                <div class="card mb-4">
+                    <div class="card-body">
+                        @include('profile.partials.update-profile-information-form')
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        @include('profile.partials.update-password-form')
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        @include('profile.partials.delete-user-form')
+                    </div>
                 </div>
             </div>
         </div>

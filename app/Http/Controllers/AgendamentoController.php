@@ -59,7 +59,11 @@ class AgendamentoController extends Controller
         $dados = $request->all();
 
         if (empty($dados['cliente_id'])) {
-            $dados['cliente_id'] = Auth::user()->cliente->id; 
+            $cliente = Auth::user()->cliente;
+            if (!$cliente) {
+                return back()->with('error', 'Cliente não encontrado. Complete seu perfil para continuar.')->withInput();
+            }
+            $dados['cliente_id'] = $cliente->id; 
         }
 
         if (empty($dados['status'])) {

@@ -5,9 +5,16 @@
 @section('content')
     <h1 class="mb-3">{{ $pagamento->exists ? 'Editar Pagamento' : 'Novo Pagamento' }}</h1>
 
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
-            <form action="{{ $pagamento->exists ? route('pagamentos.update', $pagamento->id) : route('pagamentos.store') }}" method="POST">
+            <form action="{{ $pagamento->exists ? route('pagamentos.updateForClient', $pagamento->id) : route('pagamentos.storeForClient') }}" method="POST">
                 @csrf
                 @if($pagamento->exists)
                     @method('PUT')
@@ -19,7 +26,7 @@
                         <option value="">Selecione um agendamento</option>
                         @foreach($agendamentos as $agendamento)
                             <option value="{{ $agendamento->id }}" {{ old('agendamento_id', $pagamento->agendamento_id) == $agendamento->id ? 'selected' : '' }}>
-                                #{{ $agendamento->id }} - {{ $agendamento->cliente->nome ?? '-' }} - {{ $agendamento->servico->nome ?? '-' }} 
+                                #{{ $agendamento->id }} - {{ $agendamento->servico->nome ?? '-' }} 
                                 @if($agendamento->data_hora)
                                     ({{ \Carbon\Carbon::parse($agendamento->data_hora)->format('d/m/Y H:i') }})
                                 @endif
@@ -70,9 +77,10 @@
 
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-success">{{ $pagamento->exists ? 'Atualizar' : 'Cadastrar' }}</button>
-                    <a href="{{ route('pagamentos.index') }}" class="btn btn-secondary">Voltar</a>
+                    <a href="{{ route('pagamentos.listForClient') }}" class="btn btn-secondary">Voltar</a>
                 </div>
             </form>
         </div>
     </div>
 @endsection
+

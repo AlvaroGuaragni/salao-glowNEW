@@ -1,4 +1,4 @@
-@extends('base')
+@extends('layouts.base')
 
 @section('title', 'Lista de Serviços')
 

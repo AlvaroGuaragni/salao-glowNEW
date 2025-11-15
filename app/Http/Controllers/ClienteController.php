@@ -9,9 +9,12 @@ class ClienteController extends Controller
     {
         $query = Cliente::query();
         if ($request->has('busca')) {
-            $query->where('nome', 'like', '%' . $request->busca . '%')
-                  ->orWhere('cpf', 'like', '%' . $request->busca . '%')
-                  ->orWhere('email', 'like', '%' . $request->busca . '%');
+            $busca = $request->busca;
+            $query->where(function($q) use ($busca) {
+                $q->where('nome', 'like', '%' . $busca . '%')
+                  ->orWhere('cpf', 'like', '%' . $busca . '%')
+                  ->orWhere('email', 'like', '%' . $busca . '%');
+            });
         }
         $clientes = $query->paginate(15);
         return view('cliente.list', compact('clientes'));

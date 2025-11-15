@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 @extends('layouts.base')
-=======
-@extends('base')
->>>>>>> 355182ea0c0ef1c02a33d5ea304bdeeffc09c103
 @section('title', 'Página Inicial - Salão Glow')
 
 @section('content')
