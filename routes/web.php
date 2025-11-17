@@ -23,8 +23,21 @@ Route::get('/dashboard', function (Request $request) {
         return redirect()->route('profile.edit')->with('error', 'Complete seu perfil para continuar.');
     }
     
-    $agendamentos = Agendamento::with('servico')
-        ->where('cliente_id', $cliente->id)
+    $agendamentosQuery = Agendamento::with('servico')
+        ->where('cliente_id', $cliente->id);
+
+    if ($request->filled('busca')) {
+        $busca = $request->busca;
+        $agendamentosQuery->where(function ($q) use ($busca) {
+            $q->where('status', 'like', '%' . $busca . '%')
+                ->orWhereDate('data_hora', $busca)
+                ->orWhereHas('servico', function ($sub) use ($busca) {
+                    $sub->where('nome', 'like', '%' . $busca . '%');
+                });
+        });
+    }
+
+    $agendamentos = $agendamentosQuery
         ->orderBy('data_hora', 'desc')
         ->get();
     
@@ -38,6 +51,9 @@ Route::middleware('auth')->group(function () {
     
  
     Route::get('/meus-agendamentos/novo', [AgendamentoController::class, 'createForClient'])->name('agendamentos.createForClient');
+    Route::get('/meus-agendamentos/{agendamento}/editar', [AgendamentoController::class, 'editForClient'])->name('agendamentos.editForClient');
+    Route::put('/meus-agendamentos/{agendamento}', [AgendamentoController::class, 'updateForClient'])->name('agendamentos.updateForClient');
+    Route::delete('/meus-agendamentos/{agendamento}', [AgendamentoController::class, 'destroyForClient'])->name('agendamentos.destroyForClient');
     
 
     Route::get('/servicos-disponiveis', [ServicoController::class, 'listForClient'])->name('servicos.listForClient');

@@ -7,7 +7,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form action="{{ $pagamento->exists ? route('pagamentos.update', $pagamento->id) : route('pagamentos.store') }}" method="POST">
+            <form action="{{ $pagamento->exists ? route('pagamentos.update', $pagamento->id) : route('pagamentos.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if($pagamento->exists)
                     @method('PUT')
@@ -66,6 +66,20 @@
                     @error('status')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="comprovante" class="form-label">Comprovante de Pagamento</label>
+                    <input type="file" id="comprovante" name="comprovante" class="form-control @error('comprovante') is-invalid @enderror" accept="image/*">
+                    @error('comprovante')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    @if($pagamento->comprovante_path)
+                        <div class="mt-2">
+                            <p class="text-muted mb-1">Prévia:</p>
+                            <img src="{{ Storage::url($pagamento->comprovante_path) }}" alt="Comprovante" class="rounded shadow-sm" style="max-width: 220px; height: auto;">
+                        </div>
+                    @endif
                 </div>
 
                 <div class="d-flex gap-2">

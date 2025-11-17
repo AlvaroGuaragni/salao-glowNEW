@@ -13,14 +13,27 @@
                 </a>
             </div>
 
+            <form method="GET" action="{{ route('dashboard') }}" class="d-flex gap-2 mb-3">
+                <input 
+                    type="text" 
+                    name="busca" 
+                    class="form-control" 
+                    value="{{ request('busca') }}" 
+                    placeholder="Buscar por serviço, status ou data (YYYY-MM-DD)..."
+                >
+                <button type="submit" class="btn btn-primary">Buscar</button>
+                <a href="{{ route('dashboard') }}" class="btn btn-warning">Limpar</a>
+            </form>
+
             @if($agendamentos->count() > 0)
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover align-middle">
                         <thead class="table-dark">
                             <tr>
                                 <th>Serviço</th>
                                 <th>Data / Hora</th>
                                 <th>Status</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -29,6 +42,16 @@
                                     <td>{{ $agendamento->servico->nome ?? 'Serviço excluído' }}</td>
                                     <td>{{ \Carbon\Carbon::parse($agendamento->data_hora)->format('d/m/Y \à\s H:i') }}</td>
                                     <td><span class="badge bg-info">{{ ucfirst($agendamento->status) }}</span></td>
+                                    <td class="d-flex flex-wrap gap-2">
+                                        <a href="{{ route('agendamentos.editForClient', $agendamento->id) }}" class="btn btn-warning btn-sm">
+                                            Editar
+                                        </a>
+                                        <form action="{{ route('agendamentos.destroyForClient', $agendamento->id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja cancelar este agendamento?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm">Cancelar</button>
+                                        </form>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

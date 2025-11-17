@@ -14,7 +14,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form action="{{ $servico->exists ? route('servicos.updateForClient', $servico->id) : route('servicos.storeForClient') }}" method="POST">
+            <form action="{{ $servico->exists ? route('servicos.updateForClient', $servico->id) : route('servicos.storeForClient') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if($servico->exists)
                     @method('PUT')
@@ -50,6 +50,20 @@
                     @error('duracao')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
+                </div>
+
+                <div class="mb-3">
+                    <label for="imagem" class="form-label">Imagem do Serviço</label>
+                    <input type="file" id="imagem" name="imagem" class="form-control @error('imagem') is-invalid @enderror" accept="image/*">
+                    @error('imagem')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    @if($servico->imagem_path)
+                        <div class="mt-2">
+                            <p class="text-muted mb-1">Prévia:</p>
+                            <img src="{{ Storage::url($servico->imagem_path) }}" alt="Imagem do serviço" class="rounded shadow-sm" style="max-width: 220px; height: auto;">
+                        </div>
+                    @endif
                 </div>
 
                 <div class="d-flex gap-2">

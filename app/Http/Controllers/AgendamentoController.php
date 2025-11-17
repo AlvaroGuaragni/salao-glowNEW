@@ -6,12 +6,40 @@ use App\Models\Cliente;
 use App\Models\Servico;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class AgendamentoController extends Controller
 {
+    private const STATUS_OPTIONS = [
+        'agendado',
+        'confirmado',
+        'em_andamento',
+        'concluido',
+        'cancelado',
+    ];
+
     public function index(Request $request)
     {
-        $agendamentos = Agendamento::with(['cliente', 'servico'])->paginate(15);
+        $query = Agendamento::with(['cliente', 'servico'])->orderBy('data_hora', 'desc');
+
+        if ($request->filled('busca')) {
+            $busca = $request->busca;
+
+            $query->where(function ($q) use ($busca) {
+                $q->where('status', 'like', '%' . $busca . '%')
+                    ->orWhereDate('data_hora', $busca)
+                    ->orWhereHas('cliente', function ($sub) use ($busca) {
+                        $sub->where('nome', 'like', '%' . $busca . '%')
+                            ->orWhere('email', 'like', '%' . $busca . '%');
+                    })
+                    ->orWhereHas('servico', function ($sub) use ($busca) {
+                        $sub->where('nome', 'like', '%' . $busca . '%');
+                    });
+            });
+        }
+
+        $agendamentos = $query->paginate(15)->withQueryString();
+
         return view('agendamento.list', compact('agendamentos'));
     }
 
@@ -30,13 +58,24 @@ class AgendamentoController extends Controller
         return view('agendamento.form', compact('agendamento', 'clientes', 'servicos'));
     }
 
+    protected function ensureClientOwns(Agendamento $agendamento)
+    {
+        $cliente = Auth::user()->cliente;
+
+        if (!$cliente || $agendamento->cliente_id !== $cliente->id) {
+            abort(403, 'Você não tem permissão para acessar este agendamento.');
+        }
+
+        return $cliente;
+    }
+
     public function update(Request $request, Agendamento $agendamento)
     {
         $request->validate([
             'cliente_id' => 'required|exists:clientes,id',
             'servico_id' => 'required|exists:servicos,id',
             'data_hora' => 'required|date',
-            'status' => 'required|string',
+            'status' => ['required', Rule::in(self::STATUS_OPTIONS)],
         ]);
         $agendamento->update($request->all());
         return redirect()->route('agendamentos.index')->with('success', 'Agendamento atualizado.');
@@ -52,6 +91,18 @@ class AgendamentoController extends Controller
         $servicos = Servico::orderBy('nome')->get();
         
         return view('agendamento.form-cliente', compact('servicos')); 
+    }
+
+    public function editForClient(Agendamento $agendamento)
+    {
+        $this->ensureClientOwns($agendamento);
+
+        $servicos = Servico::orderBy('nome')->get();
+
+        return view('agendamento.form-cliente', [
+            'servicos' => $servicos,
+            'agendamento' => $agendamento,
+        ]);
     }
 
     public function store(Request $request)
@@ -74,8 +125,8 @@ class AgendamentoController extends Controller
         $request->validate([
             'cliente_id' => 'required|exists:clientes,id',
             'servico_id' => 'required|exists:servicos,id',
-            'data_hora' => 'required|date',
-            'status' => 'required|string',
+            'data_hora' => 'required|date|after:now',
+            'status' => ['required', Rule::in(self::STATUS_OPTIONS)],
         ]);
 
         Agendamento::create($dados);
@@ -85,5 +136,28 @@ class AgendamentoController extends Controller
         }
 
         return redirect()->route('dashboard')->with('success', 'Seu agendamento foi realizado com sucesso!');
+    }
+
+    public function updateForClient(Request $request, Agendamento $agendamento)
+    {
+        $this->ensureClientOwns($agendamento);
+
+        $dadosValidados = $request->validate([
+            'servico_id' => 'required|exists:servicos,id',
+            'data_hora' => 'required|date|after:now',
+        ]);
+
+        $agendamento->update($dadosValidados);
+
+        return redirect()->route('dashboard')->with('success', 'Agendamento atualizado com sucesso!');
+    }
+
+    public function destroyForClient(Agendamento $agendamento)
+    {
+        $this->ensureClientOwns($agendamento);
+
+        $agendamento->delete();
+
+        return redirect()->route('dashboard')->with('success', 'Agendamento cancelado com sucesso.');
     }
 }

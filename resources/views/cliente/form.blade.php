@@ -7,7 +7,7 @@
 
     <div class="card">
         <div class="card-body">
-            <form action="{{ isset($cliente->id) ? route('clientes.update', $cliente->id) : route('clientes.store') }}" method="POST">
+            <form action="{{ isset($cliente->id) ? route('clientes.update', $cliente->id) : route('clientes.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if(isset($cliente->id))
                     @method('PUT')
@@ -31,6 +31,20 @@
                 <div class="mb-3">
                     <label for="telefone" class="form-label">Telefone</label>
                     <input type="tel" id="telefone" name="telefone" class="form-control" value="{{ old('telefone', $cliente->telefone) }}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="foto" class="form-label">Foto do Cliente</label>
+                    <input type="file" id="foto" name="foto" class="form-control @error('foto') is-invalid @enderror" accept="image/*">
+                    @error('foto')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    @if($cliente->foto_path)
+                        <div class="mt-2">
+                            <p class="text-muted mb-1">Prévia:</p>
+                            <img src="{{ Storage::url($cliente->foto_path) }}" alt="Foto do cliente" class="rounded shadow-sm" style="max-width: 180px; height: auto;">
+                        </div>
+                    @endif
                 </div>
 
                 <div class="d-flex gap-2">

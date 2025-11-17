@@ -39,6 +39,7 @@
                     <table class="table table-striped table-hover">
                         <thead class="table-dark">
                             <tr>
+                                <th>Imagem</th>
                                 <th>Serviço</th>
                                 <th>Descrição</th>
                                 <th>Preço</th>
@@ -49,6 +50,13 @@
                         <tbody>
                             @foreach($servicos as $servico)
                                 <tr>
+                                    <td>
+                                        @if($servico->imagem_path)
+                                            <img src="{{ Storage::url($servico->imagem_path) }}" alt="{{ $servico->nome }}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $servico->nome }}</td>
                                     <td>{{ $servico->descricao ?? '-' }}</td>
                                     <td>R$ {{ number_format($servico->preco, 2, ',', '.') }}</td>

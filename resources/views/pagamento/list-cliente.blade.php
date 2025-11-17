@@ -32,11 +32,24 @@
                 @endif
             </div>
 
+            <form method="GET" action="{{ route('pagamentos.listForClient') }}" class="d-flex gap-2 mb-3">
+                <input 
+                    type="text" 
+                    name="busca" 
+                    class="form-control" 
+                    value="{{ request('busca') }}" 
+                    placeholder="Buscar por serviço, método ou status..."
+                >
+                <button type="submit" class="btn btn-primary">Buscar</button>
+                <a href="{{ route('pagamentos.listForClient') }}" class="btn btn-warning">Limpar</a>
+            </form>
+
             @if($pagamentos->count() > 0)
                 <div class="table-responsive">
                     <table class="table table-striped table-hover">
                         <thead class="table-dark">
                             <tr>
+                                <th>Comprovante</th>
                                 <th>Agendamento</th>
                                 <th>Serviço</th>
                                 <th>Valor</th>
@@ -48,6 +61,15 @@
                         <tbody>
                             @foreach($pagamentos as $pagamento)
                                 <tr>
+                                    <td>
+                                    @if($pagamento->comprovante_path)
+                                        <a href="{{ Storage::url($pagamento->comprovante_path) }}" target="_blank" class="d-inline-block">
+                                            <img src="{{ Storage::url($pagamento->comprovante_path) }}" alt="Comprovante #{{ $pagamento->id }}" class="rounded" style="width: 56px; height: 56px; object-fit: cover;">
+                                        </a>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                    </td>
                                     <td>#{{ $pagamento->agendamento_id }}</td>
                                     <td>{{ $pagamento->agendamento->servico->nome ?? '-' }}</td>
                                     <td>R$ {{ number_format($pagamento->valor, 2, ',', '.') }}</td>

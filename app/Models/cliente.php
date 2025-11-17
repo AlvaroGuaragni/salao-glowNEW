@@ -16,6 +16,7 @@ class Cliente extends Model
         'cpf',
         'email',
         'telefone',
+        'foto_path',
     ];
 
     public function agendamentos()

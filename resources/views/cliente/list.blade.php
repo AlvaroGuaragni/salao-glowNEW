@@ -25,6 +25,7 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>ID</th>
+                                <th>Foto</th>
                                 <th>Nome</th>
                                 <th>CPF</th>
                                 <th>Email</th>
@@ -36,6 +37,13 @@
                             @foreach($clientes as $cliente)
                                 <tr>
                                     <td>{{ $cliente->id }}</td>
+                                    <td>
+                                        @if($cliente->foto_path)
+                                            <img src="{{ Storage::url($cliente->foto_path) }}" alt="{{ $cliente->nome }}" class="rounded-circle" style="width: 48px; height: 48px; object-fit: cover;">
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $cliente->nome }}</td>
                                     <td>{{ $cliente->cpf }}</td>
                                     <td>{{ $cliente->email ?? '-' }}</td>

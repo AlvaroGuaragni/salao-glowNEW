@@ -18,6 +18,7 @@ class Servico extends Model
         'descricao',
         'preco',
         'duracao',
+        'imagem_path',
     ];
 
     public function agendamentos()

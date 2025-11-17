@@ -4,6 +4,7 @@ use App\Models\Pagamento;
 use App\Models\Agendamento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -45,20 +46,23 @@ class PagamentoController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'agendamento_id' => 'required|exists:agendamentos,id',
             'valor' => 'required|numeric|min:0.01',
             'metodo' => 'required|string|in:dinheiro,cartao_debito,cartao_credito,pix,transferencia',
             'status' => 'required|string|in:pendente,pago,cancelado,reembolsado',
+            'comprovante' => 'nullable|image|max:4096',
         ]);
         
         // Verificar se o agendamento já tem pagamento
-        $pagamentoExistente = Pagamento::where('agendamento_id', $request->agendamento_id)->first();
+        $pagamentoExistente = Pagamento::where('agendamento_id', $validated['agendamento_id'])->first();
         if ($pagamentoExistente) {
             return back()->with('error', 'Este agendamento já possui um pagamento registrado.')->withInput();
         }
         
-        Pagamento::create($request->all());
+        $dados = $this->buildPagamentoData($request, $validated);
+
+        Pagamento::create($dados);
         return redirect()->route('pagamentos.index')->with('success', 'Pagamento registrado com sucesso.');
     }
 
@@ -70,27 +74,32 @@ class PagamentoController extends Controller
 
     public function update(Request $request, Pagamento $pagamento)
     {
-        $request->validate([
+        $validated = $request->validate([
             'agendamento_id' => 'required|exists:agendamentos,id',
             'valor' => 'required|numeric|min:0.01',
             'metodo' => 'required|string|in:dinheiro,cartao_debito,cartao_credito,pix,transferencia',
             'status' => 'required|string|in:pendente,pago,cancelado,reembolsado',
+            'comprovante' => 'nullable|image|max:4096',
         ]);
         
         // Verificar se outro pagamento já existe para este agendamento
-        $pagamentoExistente = Pagamento::where('agendamento_id', $request->agendamento_id)
+        $pagamentoExistente = Pagamento::where('agendamento_id', $validated['agendamento_id'])
             ->where('id', '!=', $pagamento->id)
             ->first();
         if ($pagamentoExistente) {
             return back()->with('error', 'Este agendamento já possui outro pagamento registrado.')->withInput();
         }
         
-        $pagamento->update($request->all());
+        $dados = $this->buildPagamentoData($request, $validated, $pagamento);
+
+        $pagamento->update($dados);
         return redirect()->route('pagamentos.index')->with('success', 'Pagamento atualizado com sucesso.');
     }
 
     public function destroy(Pagamento $pagamento)
     {
+        $this->deleteComprovante($pagamento);
+
         $pagamento->delete();
         return redirect()->route('pagamentos.index')->with('success', 'Pagamento excluído.');
     }
@@ -101,13 +110,31 @@ class PagamentoController extends Controller
         if (!$cliente) {
             return back()->with('error', 'Cliente não encontrado. Complete seu perfil para continuar.');
         }
+
+        $query = Pagamento::with('agendamento.servico')
+            ->whereHas('agendamento', function ($sub) use ($cliente) {
+                $sub->where('cliente_id', $cliente->id);
+            });
+
+        if ($request->filled('busca')) {
+            $busca = $request->busca;
+            $query->where(function ($q) use ($busca) {
+                $q->where('metodo', 'like', '%' . $busca . '%')
+                    ->orWhere('status', 'like', '%' . $busca . '%')
+                    ->orWhereHas('agendamento', function ($agendamentoQuery) use ($busca) {
+                        $agendamentoQuery
+                            ->where('id', $busca)
+                            ->orWhereHas('servico', function ($servicoQuery) use ($busca) {
+                                $servicoQuery->where('nome', 'like', '%' . $busca . '%');
+                            });
+                    });
+            });
+        }
         
-        $pagamentos = Pagamento::with('agendamento.servico')
-            ->whereHas('agendamento', function ($query) use ($cliente) {
-                $query->where('cliente_id', $cliente->id);
-            })
+        $pagamentos = $query
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
         return view('pagamento.list-cliente', compact('pagamentos'));
     }
 
@@ -135,26 +162,29 @@ class PagamentoController extends Controller
             return back()->with('error', 'Cliente não encontrado. Complete seu perfil para continuar.');
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'agendamento_id' => 'required|exists:agendamentos,id',
             'valor' => 'required|numeric|min:0.01',
             'metodo' => 'required|string|in:dinheiro,cartao_debito,cartao_credito,pix,transferencia',
             'status' => 'required|string|in:pendente,pago,cancelado,reembolsado',
+            'comprovante' => 'nullable|image|max:4096',
         ]);
 
         // Verificar se o agendamento pertence ao cliente
-        $agendamento = Agendamento::findOrFail($request->agendamento_id);
+        $agendamento = Agendamento::findOrFail($validated['agendamento_id']);
         if ($agendamento->cliente_id != $cliente->id) {
             return back()->with('error', 'Você não tem permissão para criar pagamento para este agendamento.')->withInput();
         }
         
         // Verificar se o agendamento já tem pagamento
-        $pagamentoExistente = Pagamento::where('agendamento_id', $request->agendamento_id)->first();
+        $pagamentoExistente = Pagamento::where('agendamento_id', $validated['agendamento_id'])->first();
         if ($pagamentoExistente) {
             return back()->with('error', 'Este agendamento já possui um pagamento registrado.')->withInput();
         }
         
-        Pagamento::create($request->all());
+        $dados = $this->buildPagamentoData($request, $validated);
+
+        Pagamento::create($dados);
         return redirect()->route('pagamentos.listForClient')->with('success', 'Pagamento registrado com sucesso.');
     }
 
@@ -190,28 +220,31 @@ class PagamentoController extends Controller
             return back()->with('error', 'Você não tem permissão para editar este pagamento.');
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'agendamento_id' => 'required|exists:agendamentos,id',
             'valor' => 'required|numeric|min:0.01',
             'metodo' => 'required|string|in:dinheiro,cartao_debito,cartao_credito,pix,transferencia',
             'status' => 'required|string|in:pendente,pago,cancelado,reembolsado',
+            'comprovante' => 'nullable|image|max:4096',
         ]);
 
         // Verificar se o agendamento pertence ao cliente
-        $agendamento = Agendamento::findOrFail($request->agendamento_id);
+        $agendamento = Agendamento::findOrFail($validated['agendamento_id']);
         if ($agendamento->cliente_id != $cliente->id) {
             return back()->with('error', 'Você não tem permissão para associar este agendamento.')->withInput();
         }
         
         // Verificar se outro pagamento já existe para este agendamento
-        $pagamentoExistente = Pagamento::where('agendamento_id', $request->agendamento_id)
+        $pagamentoExistente = Pagamento::where('agendamento_id', $validated['agendamento_id'])
             ->where('id', '!=', $pagamento->id)
             ->first();
         if ($pagamentoExistente) {
             return back()->with('error', 'Este agendamento já possui outro pagamento registrado.')->withInput();
         }
         
-        $pagamento->update($request->all());
+        $dados = $this->buildPagamentoData($request, $validated, $pagamento);
+
+        $pagamento->update($dados);
         return redirect()->route('pagamentos.listForClient')->with('success', 'Pagamento atualizado com sucesso.');
     }
 
@@ -226,6 +259,8 @@ class PagamentoController extends Controller
         if ($pagamento->agendamento->cliente_id != $cliente->id) {
             return back()->with('error', 'Você não tem permissão para excluir este pagamento.');
         }
+
+        $this->deleteComprovante($pagamento);
 
         $pagamento->delete();
         return redirect()->route('pagamentos.listForClient')->with('success', 'Pagamento excluído com sucesso.');
@@ -273,5 +308,27 @@ class PagamentoController extends Controller
         return response($dompdf->output(), 200)
             ->header('Content-Type', 'application/pdf')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    protected function buildPagamentoData(Request $request, array $validated, ?Pagamento $pagamento = null): array
+    {
+        $dados = collect($validated)->except('comprovante')->toArray();
+
+        if ($request->hasFile('comprovante')) {
+            if ($pagamento && $pagamento->comprovante_path) {
+                Storage::disk('public')->delete($pagamento->comprovante_path);
+            }
+
+            $dados['comprovante_path'] = $request->file('comprovante')->store('pagamentos', 'public');
+        }
+
+        return $dados;
+    }
+
+    protected function deleteComprovante(Pagamento $pagamento): void
+    {
+        if ($pagamento->comprovante_path) {
+            Storage::disk('public')->delete($pagamento->comprovante_path);
+        }
     }
 }

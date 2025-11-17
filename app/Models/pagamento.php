@@ -18,6 +18,7 @@ class Pagamento extends Model
         'valor',
         'metodo',
         'status',
+        'comprovante_path',
     ];
 
     public function agendamento()

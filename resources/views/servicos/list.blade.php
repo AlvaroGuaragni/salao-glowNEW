@@ -25,6 +25,7 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>ID</th>
+                                <th>Imagem</th>
                                 <th>Nome</th>
                                 <th>Descrição</th>
                                 <th>Preço</th>
@@ -36,6 +37,13 @@
                             @foreach($servicos as $servico)
                                 <tr>
                                     <td>{{ $servico->id }}</td>
+                                    <td>
+                                        @if($servico->imagem_path)
+                                            <img src="{{ Storage::url($servico->imagem_path) }}" alt="{{ $servico->nome }}" class="rounded" style="width: 64px; height: 64px; object-fit: cover;">
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $servico->nome }}</td>
                                     <td>{{ $servico->descricao ?? '-' }}</td>
                                     <td>R$ {{ number_format($servico->preco, 2, ',', '.') }}</td>

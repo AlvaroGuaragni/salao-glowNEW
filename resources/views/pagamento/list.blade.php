@@ -25,6 +25,7 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>ID</th>
+                                <th>Comprovante</th>
                                 <th>Agendamento</th>
                                 <th>Cliente</th>
                                 <th>Serviço</th>
@@ -38,6 +39,15 @@
                             @foreach($pagamentos as $pagamento)
                                 <tr>
                                     <td>{{ $pagamento->id }}</td>
+                                    <td>
+                                        @if($pagamento->comprovante_path)
+                                            <a href="{{ Storage::url($pagamento->comprovante_path) }}" target="_blank" class="d-inline-block">
+                                                <img src="{{ Storage::url($pagamento->comprovante_path) }}" alt="Comprovante #{{ $pagamento->id }}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                                            </a>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
                                     <td>#{{ $pagamento->agendamento_id }}</td>
                                     <td>{{ $pagamento->agendamento->cliente->nome ?? '-' }}</td>
                                     <td>{{ $pagamento->agendamento->servico->nome ?? '-' }}</td>

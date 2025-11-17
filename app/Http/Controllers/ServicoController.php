@@ -1,17 +1,23 @@
 <?php
+
 namespace App\Http\Controllers;
+
 use App\Models\Servico;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ServicoController extends Controller
 {
     public function index(Request $request)
     {
         $query = Servico::query();
-        if ($request->has('busca')) {
+
+        if ($request->filled('busca')) {
             $query->where('nome', 'like', '%' . $request->busca . '%');
         }
-        $servicos = $query->paginate(15);
+
+        $servicos = $query->orderBy('nome')->paginate(15)->withQueryString();
+
         return view('servicos.list', compact('servicos'));
     }
 
@@ -23,13 +29,10 @@ class ServicoController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nome' => 'required|string|max:250',
-            'descricao' => 'nullable|string',
-            'preco' => 'required|numeric|min:0',
-            'duracao' => 'required|integer|min:1',
-        ]);
-        Servico::create($validated);
+        $dados = $this->prepareServicoData($request);
+
+        Servico::create($dados);
+
         return redirect()->route('servicos.index')->with('success', 'Serviço cadastrado com sucesso.');
     }
 
@@ -40,29 +43,32 @@ class ServicoController extends Controller
 
     public function update(Request $request, Servico $servico)
     {
-        $validated = $request->validate([
-            'nome' => 'required|string|max:250',
-            'descricao' => 'nullable|string',
-            'preco' => 'required|numeric|min:0',
-            'duracao' => 'required|integer|min:1',
-        ]);
-        $servico->update($validated);
+        $dados = $this->prepareServicoData($request, $servico);
+
+        $servico->update($dados);
+
         return redirect()->route('servicos.index')->with('success', 'Serviço atualizado com sucesso.');
     }
 
     public function destroy(Servico $servico)
     {
+        $this->deleteImagem($servico);
+
         $servico->delete();
+
         return redirect()->route('servicos.index')->with('success', 'Serviço excluído com sucesso.');
     }
 
     public function listForClient(Request $request)
     {
         $query = Servico::query();
-        if ($request->has('busca')) {
+
+        if ($request->filled('busca')) {
             $query->where('nome', 'like', '%' . $request->busca . '%');
         }
-        $servicos = $query->orderBy('nome')->paginate(10);
+
+        $servicos = $query->orderBy('nome')->paginate(10)->withQueryString();
+
         return view('servicos.list-cliente', compact('servicos'));
     }
 
@@ -74,13 +80,10 @@ class ServicoController extends Controller
 
     public function storeForClient(Request $request)
     {
-        $validated = $request->validate([
-            'nome' => 'required|string|max:250',
-            'descricao' => 'nullable|string',
-            'preco' => 'required|numeric|min:0',
-            'duracao' => 'required|integer|min:1',
-        ]);
-        Servico::create($validated);
+        $dados = $this->prepareServicoData($request);
+
+        Servico::create($dados);
+
         return redirect()->route('servicos.listForClient')->with('success', 'Serviço cadastrado com sucesso.');
     }
 
@@ -91,19 +94,49 @@ class ServicoController extends Controller
 
     public function updateForClient(Request $request, Servico $servico)
     {
-        $validated = $request->validate([
-            'nome' => 'required|string|max:250',
-            'descricao' => 'nullable|string',
-            'preco' => 'required|numeric|min:0',
-            'duracao' => 'required|integer|min:1',
-        ]);
-        $servico->update($validated);
+        $dados = $this->prepareServicoData($request, $servico);
+
+        $servico->update($dados);
+
         return redirect()->route('servicos.listForClient')->with('success', 'Serviço atualizado com sucesso.');
     }
 
     public function destroyForClient(Servico $servico)
     {
+        $this->deleteImagem($servico);
+
         $servico->delete();
+
         return redirect()->route('servicos.listForClient')->with('success', 'Serviço excluído com sucesso.');
+    }
+
+    protected function prepareServicoData(Request $request, ?Servico $servico = null): array
+    {
+        $validated = $request->validate([
+            'nome' => 'required|string|max:250',
+            'descricao' => 'nullable|string',
+            'preco' => 'required|numeric|min:0',
+            'duracao' => 'required|integer|min:1',
+            'imagem' => 'nullable|image|max:2048',
+        ]);
+
+        $dados = collect($validated)->except('imagem')->toArray();
+
+        if ($request->hasFile('imagem')) {
+            if ($servico && $servico->imagem_path) {
+                Storage::disk('public')->delete($servico->imagem_path);
+            }
+
+            $dados['imagem_path'] = $request->file('imagem')->store('servicos', 'public');
+        }
+
+        return $dados;
+    }
+
+    protected function deleteImagem(Servico $servico): void
+    {
+        if ($servico->imagem_path) {
+            Storage::disk('public')->delete($servico->imagem_path);
+        }
     }
 }

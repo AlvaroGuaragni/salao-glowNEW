@@ -15,7 +15,7 @@
 
                 <div class="mb-3">
                     <label for="cliente_id" class="form-label">Cliente *</label>
-                    <select id="cliente_id" name="cliente_id" class="form-select" required>
+                    <select id="cliente_id" name="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" required>
                         <option value="">Selecione um cliente</option>
                         @foreach($clientes as $cliente)
                             <option value="{{ $cliente->id }}" {{ old('cliente_id', $agendamento->cliente_id) == $cliente->id ? 'selected' : '' }}>
@@ -23,11 +23,14 @@
                             </option>
                         @endforeach
                     </select>
+                    @error('cliente_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="mb-3">
                     <label for="servico_id" class="form-label">Serviço *</label>
-                    <select id="servico_id" name="servico_id" class="form-select" required>
+                    <select id="servico_id" name="servico_id" class="form-select @error('servico_id') is-invalid @enderror" required>
                         <option value="">Selecione um serviço</option>
                         @foreach($servicos as $servico)
                             <option value="{{ $servico->id }}" {{ old('servico_id', $agendamento->servico_id) == $servico->id ? 'selected' : '' }}>
@@ -35,16 +38,22 @@
                             </option>
                         @endforeach
                     </select>
+                    @error('servico_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="mb-3">
                     <label for="data_hora" class="form-label">Data e Hora *</label>
-                    <input type="datetime-local" id="data_hora" name="data_hora" class="form-control" value="{{ old('data_hora', $agendamento->data_hora ? \Carbon\Carbon::parse($agendamento->data_hora)->format('Y-m-d\TH:i') : '') }}" required>
+                    <input type="datetime-local" id="data_hora" name="data_hora" class="form-control @error('data_hora') is-invalid @enderror" value="{{ old('data_hora', $agendamento->data_hora ? \Carbon\Carbon::parse($agendamento->data_hora)->format('Y-m-d\\TH:i') : '') }}" required>
+                    @error('data_hora')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="mb-3">
                     <label for="status" class="form-label">Status *</label>
-                    <select id="status" name="status" class="form-select" required>
+                    <select id="status" name="status" class="form-select @error('status') is-invalid @enderror" required>
                         <option value="">Selecione um status</option>
                         <option value="agendado" {{ old('status', $agendamento->status) == 'agendado' ? 'selected' : '' }}>Agendado</option>
                         <option value="confirmado" {{ old('status', $agendamento->status) == 'confirmado' ? 'selected' : '' }}>Confirmado</option>
@@ -52,6 +61,9 @@
                         <option value="concluido" {{ old('status', $agendamento->status) == 'concluido' ? 'selected' : '' }}>Concluído</option>
                         <option value="cancelado" {{ old('status', $agendamento->status) == 'cancelado' ? 'selected' : '' }}>Cancelado</option>
                     </select>
+                    @error('status')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="d-flex gap-2">
