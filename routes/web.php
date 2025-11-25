@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/agendamentos', [AgendamentoController::class, 'store'])->name('agendamentos.store');
     
+    Route::get('/servicos/relatorio/pdf', [ServicoController::class, 'relatorioPdf'])->name('servicos.relatorioPdf');
     
     Route::middleware('admin')->group(function () {
         

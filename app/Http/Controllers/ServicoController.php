@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Servico;
+use App\Models\Pagamento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class ServicoController extends Controller
 {
@@ -138,5 +141,38 @@ class ServicoController extends Controller
         if ($servico->imagem_path) {
             Storage::disk('public')->delete($servico->imagem_path);
         }
+    }
+
+    public function relatorioPdf(Request $request)
+    {
+        $servicos = Servico::orderBy('nome')->get()->map(function ($s) {
+            $s->agendamentos_count = $s->agendamentos()->count();
+            $s->total_pago = Pagamento::whereHas('agendamento', function ($q) use ($s) {
+                $q->where('servico_id', $s->id);
+            })->where('status', 'pago')->sum('valor');
+            return $s;
+        });
+
+        $totalGeral = $servicos->sum('total_pago');
+
+        // Gerar PDF usando Dompdf (mesma abordagem de PagamentoController)
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        $options->set('defaultFont', 'Arial');
+
+        $dompdf = new Dompdf($options);
+
+        $html = view('servicos.pdf-servicos', compact('servicos', 'totalGeral'))->render();
+
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = 'relatorio_servicos_' . date('Y-m-d_His') . '.pdf';
+
+        return response($dompdf->output(), 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 }

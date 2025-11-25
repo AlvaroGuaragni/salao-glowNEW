@@ -17,6 +17,9 @@
                 <a href="{{ route('servicos.create') }}" class="btn btn-success">
                     <i class="bi bi-plus-lg"></i> Novo Serviço
                 </a>
+                <a href="{{ route('servicos.relatorioPdf') }}" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-file-earmark-pdf"></i> Gerar Relatório PDF
+                </a>
             </div>
 
             @if($servicos->count() > 0)
