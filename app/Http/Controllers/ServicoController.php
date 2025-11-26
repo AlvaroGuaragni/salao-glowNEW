@@ -19,7 +19,7 @@ class ServicoController extends Controller
             $query->where('nome', 'like', '%' . $request->busca . '%');
         }
 
-        $servicos = $query->orderBy('nome')->paginate(15)->withQueryString();
+        $servicos = $query->orderBy('nome')->get();
 
         return view('servicos.list', compact('servicos'));
     }

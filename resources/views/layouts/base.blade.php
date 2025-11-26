@@ -35,7 +35,13 @@
                                 <a class="nav-link" href="{{ route('dashboard') }}">Meus Agendamentos</a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link" href="{{ route('cliente-extra.index') }}">Meus Clientes</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="{{ route('servicos.listForClient') }}">Serviços</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('produtos.index') }}">Meus Produtos</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('pagamentos.listForClient') }}">Pagamentos</a>

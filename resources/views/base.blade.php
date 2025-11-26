@@ -39,6 +39,13 @@
                                 </li>
                             @endif
 
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('cliente-extra.index') }}">Clientes Extras</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('produtos.index') }}">Produtos</a>
+                            </li>
+
                             @if(auth()->user()->role == 'cliente')
                                 <li class="nav-item">
                                     <a class="nav-link" href="{{ route('dashboard') }}">Meus Agendamentos</a>

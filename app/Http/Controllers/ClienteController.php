@@ -21,7 +21,7 @@ class ClienteController extends Controller
             });
         }
 
-        $clientes = $query->orderBy('nome')->paginate(15)->withQueryString();
+        $clientes = $query->orderBy('nome')->get();
 
         return view('cliente.list', compact('clientes'));
     }

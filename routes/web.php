@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\AgendamentoController;
 use App\Http\Controllers\ClienteController;
+use App\Http\Controllers\ClienteExtraController;
 use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServicoController;
+use App\Http\Controllers\ProdutoController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\Agendamento; 
@@ -74,6 +76,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/agendamentos', [AgendamentoController::class, 'store'])->name('agendamentos.store');
     
     Route::get('/servicos/relatorio/pdf', [ServicoController::class, 'relatorioPdf'])->name('servicos.relatorioPdf');
+    
+    // CRUDs públicos (sem proteção de admin)
+    Route::resource('cliente-extra', ClienteExtraController::class);
+    Route::resource('produtos', ProdutoController::class);
     
     Route::middleware('admin')->group(function () {
         
