@@ -5,6 +5,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ClienteExtraController;
 use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ChartController;
 use App\Http\Controllers\ServicoController;
 use App\Http\Controllers\ProdutoController;
 use Illuminate\Support\Facades\Route;
@@ -25,7 +26,7 @@ Route::get('/dashboard', function (Request $request) {
         return redirect()->route('profile.edit')->with('error', 'Complete seu perfil para continuar.');
     }
     
-    $agendamentosQuery = Agendamento::with('servico')
+    $agendamentosQuery = Agendamento::with('servicos')
         ->where('cliente_id', $cliente->id);
 
     if ($request->filled('busca')) {
@@ -33,7 +34,7 @@ Route::get('/dashboard', function (Request $request) {
         $agendamentosQuery->where(function ($q) use ($busca) {
             $q->where('status', 'like', '%' . $busca . '%')
                 ->orWhereDate('data_hora', $busca)
-                ->orWhereHas('servico', function ($sub) use ($busca) {
+                ->orWhereHas('servicos', function ($sub) use ($busca) {
                     $sub->where('nome', 'like', '%' . $busca . '%');
                 });
         });
@@ -93,3 +94,6 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Charts públicos
+Route::get('/charts', [ChartController::class, 'index'])->name('charts.index');

@@ -20,7 +20,7 @@ class AgendamentoController extends Controller
 
     public function index(Request $request)
     {
-        $query = Agendamento::with(['cliente', 'servico'])->orderBy('data_hora', 'desc');
+        $query = Agendamento::with(['cliente', 'servicos'])->orderBy('data_hora', 'desc');
 
         if ($request->filled('busca')) {
             $busca = $request->busca;
@@ -32,7 +32,7 @@ class AgendamentoController extends Controller
                         $sub->where('nome', 'like', '%' . $busca . '%')
                             ->orWhere('email', 'like', '%' . $busca . '%');
                     })
-                    ->orWhereHas('servico', function ($sub) use ($busca) {
+                    ->orWhereHas('servicos', function ($sub) use ($busca) {
                         $sub->where('nome', 'like', '%' . $busca . '%');
                     });
             });
@@ -73,11 +73,20 @@ class AgendamentoController extends Controller
     {
         $request->validate([
             'cliente_id' => 'required|exists:clientes,id',
-            'servico_id' => 'required|exists:servicos,id',
+            'servico_ids' => 'required|array|min:1',
+            'servico_ids.*' => 'required|exists:servicos,id',
             'data_hora' => 'required|date',
             'status' => ['required', Rule::in(self::STATUS_OPTIONS)],
         ]);
-        $agendamento->update($request->all());
+
+        $agendamento->update([
+            'cliente_id' => $request->cliente_id,
+            'data_hora' => $request->data_hora,
+            'status' => $request->status,
+        ]);
+
+        $agendamento->servicos()->sync($request->servico_ids);
+
         return redirect()->route('agendamentos.index')->with('success', 'Agendamento atualizado.');
     }
 
@@ -122,14 +131,22 @@ class AgendamentoController extends Controller
         }
 
         $request->merge($dados); 
+        
         $request->validate([
             'cliente_id' => 'required|exists:clientes,id',
-            'servico_id' => 'required|exists:servicos,id',
+            'servico_ids' => 'required|array|min:1',
+            'servico_ids.*' => 'required|exists:servicos,id',
             'data_hora' => 'required|date|after:now',
             'status' => ['required', Rule::in(self::STATUS_OPTIONS)],
         ]);
 
-        Agendamento::create($dados);
+        $agendamento = Agendamento::create([
+            'cliente_id' => $dados['cliente_id'],
+            'data_hora' => $dados['data_hora'],
+            'status' => $dados['status'],
+        ]);
+
+        $agendamento->servicos()->attach($dados['servico_ids']);
 
         if (Auth::user()->role === 'admin') {
             return redirect()->route('agendamentos.index')->with('success', 'Agendamento criado com sucesso.');
@@ -143,11 +160,16 @@ class AgendamentoController extends Controller
         $this->ensureClientOwns($agendamento);
 
         $dadosValidados = $request->validate([
-            'servico_id' => 'required|exists:servicos,id',
+            'servico_ids' => 'required|array|min:1',
+            'servico_ids.*' => 'required|exists:servicos,id',
             'data_hora' => 'required|date|after:now',
         ]);
 
-        $agendamento->update($dadosValidados);
+        $agendamento->update([
+            'data_hora' => $dadosValidados['data_hora'],
+        ]);
+
+        $agendamento->servicos()->sync($dadosValidados['servico_ids']);
 
         return redirect()->route('dashboard')->with('success', 'Agendamento atualizado com sucesso!');
     }

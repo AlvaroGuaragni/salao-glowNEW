@@ -17,7 +17,6 @@ class Agendamento extends Model
     
     protected $fillable = [
         'cliente_id',
-        'servico_id',
         'data_hora',
         'status',
     ];
@@ -27,9 +26,9 @@ class Agendamento extends Model
         return $this->belongsTo(Cliente::class);
     }
 
-    public function servico()
+    public function servicos()
     {
-        return $this->belongsTo(Servico::class);
+        return $this->belongsToMany(Servico::class, 'agendamento_servico');
     }
 
     public function pagamento()

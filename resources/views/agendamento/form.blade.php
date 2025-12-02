@@ -29,18 +29,24 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="servico_id" class="form-label">Serviço *</label>
-                    <select id="servico_id" name="servico_id" class="form-select @error('servico_id') is-invalid @enderror" required>
-                        <option value="">Selecione um serviço</option>
+                    <label for="servico_ids" class="form-label">Serviços * (selecione um ou mais)</label>
+                    <select id="servico_ids" name="servico_ids[]" class="form-select @error('servico_ids') is-invalid @enderror" multiple required>
                         @foreach($servicos as $servico)
-                            <option value="{{ $servico->id }}" {{ old('servico_id', $agendamento->servico_id) == $servico->id ? 'selected' : '' }}>
-                                {{ $servico->nome }} - R$ {{ number_format($servico->preco, 2, ',', '.') }}
+                            <option value="{{ $servico->id }}" 
+                                @if(isset($agendamento) && isset($agendamento->id) && $agendamento->servicos->contains($servico->id))
+                                    selected
+                                @elseif(is_array(old('servico_ids')) && in_array($servico->id, old('servico_ids')))
+                                    selected
+                                @endif
+                            >
+                                {{ $servico->nome }} - R$ {{ number_format($servico->preco, 2, ',', '.') }} ({{ $servico->duracao }} min)
                             </option>
                         @endforeach
                     </select>
-                    @error('servico_id')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                    @error('servico_ids')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
+                    <small class="form-text text-muted">Use Ctrl+Click (ou Cmd+Click no Mac) para selecionar múltiplos serviços</small>
                 </div>
 
                 <div class="mb-3">

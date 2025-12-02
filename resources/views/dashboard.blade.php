@@ -39,7 +39,13 @@
                         <tbody>
                             @foreach($agendamentos as $agendamento)
                                 <tr>
-                                    <td>{{ $agendamento->servico->nome ?? 'Serviço excluído' }}</td>
+                                    <td>
+                                        @forelse($agendamento->servicos as $servico)
+                                            <span class="badge bg-primary">{{ $servico->nome }}</span>
+                                        @empty
+                                            Serviço excluído
+                                        @endforelse
+                                    </td>
                                     <td>{{ \Carbon\Carbon::parse($agendamento->data_hora)->format('d/m/Y \à\s H:i') }}</td>
                                     <td><span class="badge bg-info">{{ ucfirst($agendamento->status) }}</span></td>
                                     <td class="d-flex flex-wrap gap-2">

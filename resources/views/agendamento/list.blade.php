@@ -37,7 +37,13 @@
                                 <tr>
                                     <td>{{ $agendamento->id }}</td>
                                     <td>{{ $agendamento->cliente->nome ?? '-' }}</td>
-                                    <td>{{ $agendamento->servico->nome ?? '-' }}</td>
+                                    <td>
+                                        @forelse($agendamento->servicos as $servico)
+                                            <span class="badge bg-info">{{ $servico->nome }}</span>
+                                        @empty
+                                            -
+                                        @endforelse
+                                    </td>
                                     <td>{{ $agendamento->data_hora ? \Carbon\Carbon::parse($agendamento->data_hora)->format('d/m/Y H:i') : '-' }}</td>
                                     <td>{{ $agendamento->status }}</td>
                                     <td>

@@ -30,6 +30,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('pagamentos.index') }}">Pagamentos</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('charts.index') }}">Gráficos</a>
+                            </li>
                         @else
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('dashboard') }}">Meus Agendamentos</a>
@@ -45,6 +48,9 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('pagamentos.listForClient') }}">Pagamentos</a>
+                            </li>
+                              <li class="nav-item">
+                                <a class="nav-link" href="{{ route('charts.index') }}">Gráficos</a>
                             </li>
                         @endif
                         <li class="nav-item">

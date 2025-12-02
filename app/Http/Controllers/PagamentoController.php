@@ -12,7 +12,7 @@ class PagamentoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Pagamento::with(['agendamento.cliente', 'agendamento.servico']);
+        $query = Pagamento::with(['agendamento.cliente', 'agendamento.servicos']);
         
         if ($request->has('busca') && !empty($request->busca)) {
             $busca = $request->busca;
@@ -20,7 +20,7 @@ class PagamentoController extends Controller
                 $q->whereHas('agendamento', function($q) use ($busca) {
                     $q->whereHas('cliente', function($q) use ($busca) {
                         $q->where('nome', 'like', '%' . $busca . '%');
-                    })->orWhereHas('servico', function($q) use ($busca) {
+                    })->orWhereHas('servicos', function($q) use ($busca) {
                         $q->where('nome', 'like', '%' . $busca . '%');
                     });
                 })
@@ -37,7 +37,7 @@ class PagamentoController extends Controller
     {
         $pagamento = new Pagamento();
         // Buscar agendamentos que ainda não têm pagamento registrado
-        $agendamentos = Agendamento::with(['cliente', 'servico'])
+        $agendamentos = Agendamento::with(['cliente', 'servicos'])
             ->whereDoesntHave('pagamento')
             ->orderBy('data_hora', 'desc')
             ->get();
@@ -68,7 +68,7 @@ class PagamentoController extends Controller
 
     public function edit(Pagamento $pagamento)
     {
-        $agendamentos = Agendamento::with(['cliente', 'servico'])->get();
+        $agendamentos = Agendamento::with(['cliente', 'servicos'])->get();
         return view('pagamento.form', compact('pagamento', 'agendamentos'));
     }
 
@@ -111,7 +111,7 @@ class PagamentoController extends Controller
             return back()->with('error', 'Cliente não encontrado. Complete seu perfil para continuar.');
         }
 
-        $query = Pagamento::with('agendamento.servico')
+        $query = Pagamento::with('agendamento.servicos')
             ->whereHas('agendamento', function ($sub) use ($cliente) {
                 $sub->where('cliente_id', $cliente->id);
             });
@@ -124,7 +124,7 @@ class PagamentoController extends Controller
                     ->orWhereHas('agendamento', function ($agendamentoQuery) use ($busca) {
                         $agendamentoQuery
                             ->where('id', $busca)
-                            ->orWhereHas('servico', function ($servicoQuery) use ($busca) {
+                            ->orWhereHas('servicos', function ($servicoQuery) use ($busca) {
                                 $servicoQuery->where('nome', 'like', '%' . $busca . '%');
                             });
                     });
@@ -147,7 +147,7 @@ class PagamentoController extends Controller
 
         $pagamento = new Pagamento();
         // Buscar agendamentos do cliente que ainda não têm pagamento registrado
-        $agendamentos = Agendamento::with(['cliente', 'servico'])
+        $agendamentos = Agendamento::with(['cliente', 'servicos'])
             ->where('cliente_id', $cliente->id)
             ->whereDoesntHave('pagamento')
             ->orderBy('data_hora', 'desc')
@@ -201,7 +201,7 @@ class PagamentoController extends Controller
         }
 
         // Buscar agendamentos do cliente
-        $agendamentos = Agendamento::with(['cliente', 'servico'])
+        $agendamentos = Agendamento::with(['cliente', 'servicos'])
             ->where('cliente_id', $cliente->id)
             ->orderBy('data_hora', 'desc')
             ->get();
@@ -274,7 +274,7 @@ class PagamentoController extends Controller
         }
 
         // Buscar todos os pagamentos do cliente
-        $pagamentos = Pagamento::with('agendamento.servico')
+        $pagamentos = Pagamento::with('agendamento.servicos')
             ->whereHas('agendamento', function ($query) use ($cliente) {
                 $query->where('cliente_id', $cliente->id);
             })

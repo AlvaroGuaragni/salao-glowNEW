@@ -14,18 +14,33 @@
                 @endif
                 
                 <div class="mb-3">
-                    <label for="servico_id" class="form-label">Qual serviço você deseja? *</label>
-                    <select id="servico_id" name="servico_id" class="form-select @error('servico_id') is-invalid @enderror" required>
-                        <option value="">Selecione um serviço</option>
+                    <label for="servico_ids" class="form-label">Quais serviços você deseja? * (selecione um ou mais)</label>
+                    <select id="servico_ids" name="servico_ids[]" class="form-select @error('servico_ids') is-invalid @enderror" multiple required>
                         @foreach($servicos as $servico)
-                            <option value="{{ $servico->id }}" {{ old('servico_id', isset($agendamento) ? $agendamento->servico_id : null) == $servico->id ? 'selected' : '' }}>
-                                {{ $servico->nome }} - R$ {{ number_format($servico->preco, 2, ',', '.') }}
+                            <option value="{{ $servico->id }}" 
+                                @if(isset($agendamento) && $agendamento->servicos->contains($servico->id))
+                                    selected
+                                @elseif(is_array(old('servico_ids')) && in_array($servico->id, old('servico_ids')))
+                                    selected
+                                @endif
+                            >
+                                {{ $servico->nome }} - R$ {{ number_format($servico->preco, 2, ',', '.') }} ({{ $servico->duracao }} min)
                             </option>
                         @endforeach
                     </select>
-                    @error('servico_id')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                    @error('servico_ids')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
+                    <small class="form-text text-muted">Use Ctrl+Click (ou Cmd+Click no Mac) para selecionar múltiplos serviços</small>
+                </div>
+
+                <div class="mb-3">
+                    <div class="alert alert-info" id="servicos-selecionados" style="display: none;">
+                        <strong>Serviços selecionados:</strong>
+                        <div id="lista-servicos"></div>
+                        <strong>Duração total: <span id="duracao-total">0</span> min</strong>
+                        <div class="mt-2"><strong>Preço total: R$ <span id="preco-total">0,00</span></strong></div>
+                    </div>
                 </div>
 
                 <div class="mb-3">
@@ -52,4 +67,58 @@
             </form>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectServicos = document.getElementById('servico_ids');
+            const servicosSelecionados = document.getElementById('servicos-selecionados');
+            const listaServicos = document.getElementById('lista-servicos');
+            const duracaoTotal = document.getElementById('duracao-total');
+            const precoTotal = document.getElementById('preco-total');
+
+            function atualizarResumo() {
+                const opcoesSelecionadas = Array.from(selectServicos.selectedOptions);
+                
+                if (opcoesSelecionadas.length === 0) {
+                    servicosSelecionados.style.display = 'none';
+                    return;
+                }
+
+                servicosSelecionados.style.display = 'block';
+                
+                let totalDuracao = 0;
+                let totalPreco = 0;
+                let html = '<ul class="mb-2">';
+
+                opcoesSelecionadas.forEach(option => {
+                    const texto = option.textContent;
+                    const duracao = parseInt(option.dataset.duracao) || 0;
+                    const preco = parseFloat(option.dataset.preco) || 0;
+                    
+                    totalDuracao += duracao;
+                    totalPreco += preco;
+                    html += `<li>${texto}</li>`;
+                });
+
+                html += '</ul>';
+                listaServicos.innerHTML = html;
+                duracaoTotal.textContent = totalDuracao;
+                precoTotal.textContent = totalPreco.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            }
+
+            // Passar dados dos serviços via data-attributes
+            @foreach($servicos as $servico)
+                const option{{ $servico->id }} = Array.from(selectServicos.options).find(o => o.value === '{{ $servico->id }}');
+                if (option{{ $servico->id }}) {
+                    option{{ $servico->id }}.dataset.duracao = {{ $servico->duracao }};
+                    option{{ $servico->id }}.dataset.preco = {{ $servico->preco }};
+                }
+            @endforeach
+
+            selectServicos.addEventListener('change', atualizarResumo);
+            
+            // Atualizar ao carregar a página
+            atualizarResumo();
+        });
+    </script>
 @endsection
