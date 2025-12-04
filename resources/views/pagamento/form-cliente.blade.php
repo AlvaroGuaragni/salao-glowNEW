@@ -26,7 +26,7 @@
                         <option value="">Selecione um agendamento</option>
                         @foreach($agendamentos as $agendamento)
                             <option value="{{ $agendamento->id }}" {{ old('agendamento_id', $pagamento->agendamento_id) == $agendamento->id ? 'selected' : '' }}>
-                                #{{ $agendamento->id }} - {{ $agendamento->servico->nome ?? '-' }} 
+                                #{{ $agendamento->id }} - {{ $agendamento->servicos->pluck('nome')->join(', ') ?? '-' }} 
                                 @if($agendamento->data_hora)
                                     ({{ \Carbon\Carbon::parse($agendamento->data_hora)->format('d/m/Y H:i') }})
                                 @endif

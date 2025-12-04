@@ -71,7 +71,7 @@
                                     @endif
                                     </td>
                                     <td>#{{ $pagamento->agendamento_id }}</td>
-                                    <td>{{ $pagamento->agendamento->servico->nome ?? '-' }}</td>
+                                    <td>{{ $pagamento->agendamento->servicos->pluck('nome')->join(', ') ?? '-' }}</td>
                                     <td>R$ {{ number_format($pagamento->valor, 2, ',', '.') }}</td>
                                     <td>{{ ucfirst(str_replace('_', ' ', $pagamento->metodo)) }}</td>
                                     <td>

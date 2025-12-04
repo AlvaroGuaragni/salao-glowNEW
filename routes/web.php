@@ -78,7 +78,7 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/servicos/relatorio/pdf', [ServicoController::class, 'relatorioPdf'])->name('servicos.relatorioPdf');
     
-    // CRUDs públicos (sem proteção de admin)
+
     Route::resource('cliente-extra', ClienteExtraController::class);
     Route::resource('produtos', ProdutoController::class);
     
