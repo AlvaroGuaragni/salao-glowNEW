@@ -1,24 +1,31 @@
-<!doctype html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gráficos</title>
-    <style>body{font-family:Arial,Helvetica,sans-serif;padding:20px}</style>
+@extends('layouts.base')
+
+@section('title', 'Gráficos')
+
+@section('content')
+    <h1 class="mb-4">Gráficos</h1>
+
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    {!! $pie->container() !!}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    {!! $line->container() !!}
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-</head>
-<body>
-    <h1>Gráficos</h1>
-
-    <div style="max-width:700px;margin-bottom:40px;">
-        {!! $pie->container() !!}
-    </div>
-
-    <div style="max-width:900px;">
-        {!! $line->container() !!}
-    </div>
-
     {!! $pie->script() !!}
     {!! $line->script() !!}
-</body>
-</html>
+@endsection

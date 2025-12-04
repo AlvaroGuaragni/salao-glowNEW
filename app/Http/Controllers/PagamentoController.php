@@ -36,7 +36,7 @@ class PagamentoController extends Controller
     public function create()
     {
         $pagamento = new Pagamento();
-        // Buscar agendamentos que ainda não têm pagamento registrado
+
         $agendamentos = Agendamento::with(['cliente', 'servicos'])
             ->whereDoesntHave('pagamento')
             ->orderBy('data_hora', 'desc')
@@ -54,7 +54,7 @@ class PagamentoController extends Controller
             'comprovante' => 'nullable|image|max:4096',
         ]);
         
-        // Verificar se o agendamento já tem pagamento
+
         $pagamentoExistente = Pagamento::where('agendamento_id', $validated['agendamento_id'])->first();
         if ($pagamentoExistente) {
             return back()->with('error', 'Este agendamento já possui um pagamento registrado.')->withInput();
@@ -82,7 +82,7 @@ class PagamentoController extends Controller
             'comprovante' => 'nullable|image|max:4096',
         ]);
         
-        // Verificar se outro pagamento já existe para este agendamento
+
         $pagamentoExistente = Pagamento::where('agendamento_id', $validated['agendamento_id'])
             ->where('id', '!=', $pagamento->id)
             ->first();
@@ -146,7 +146,7 @@ class PagamentoController extends Controller
         }
 
         $pagamento = new Pagamento();
-        // Buscar agendamentos do cliente que ainda não têm pagamento registrado
+
         $agendamentos = Agendamento::with(['cliente', 'servicos'])
             ->where('cliente_id', $cliente->id)
             ->whereDoesntHave('pagamento')
@@ -170,13 +170,13 @@ class PagamentoController extends Controller
             'comprovante' => 'nullable|image|max:4096',
         ]);
 
-        // Verificar se o agendamento pertence ao cliente
+       
         $agendamento = Agendamento::findOrFail($validated['agendamento_id']);
         if ($agendamento->cliente_id != $cliente->id) {
             return back()->with('error', 'Você não tem permissão para criar pagamento para este agendamento.')->withInput();
         }
         
-        // Verificar se o agendamento já tem pagamento
+     
         $pagamentoExistente = Pagamento::where('agendamento_id', $validated['agendamento_id'])->first();
         if ($pagamentoExistente) {
             return back()->with('error', 'Este agendamento já possui um pagamento registrado.')->withInput();
@@ -195,7 +195,7 @@ class PagamentoController extends Controller
             return back()->with('error', 'Cliente não encontrado. Complete seu perfil para continuar.');
         }
 
-        // Verificar se o pagamento pertence ao cliente
+
         if ($pagamento->agendamento->cliente_id != $cliente->id) {
             return back()->with('error', 'Você não tem permissão para editar este pagamento.');
         }
@@ -228,13 +228,13 @@ class PagamentoController extends Controller
             'comprovante' => 'nullable|image|max:4096',
         ]);
 
-        // Verificar se o agendamento pertence ao cliente
+
         $agendamento = Agendamento::findOrFail($validated['agendamento_id']);
         if ($agendamento->cliente_id != $cliente->id) {
             return back()->with('error', 'Você não tem permissão para associar este agendamento.')->withInput();
         }
         
-        // Verificar se outro pagamento já existe para este agendamento
+
         $pagamentoExistente = Pagamento::where('agendamento_id', $validated['agendamento_id'])
             ->where('id', '!=', $pagamento->id)
             ->first();
